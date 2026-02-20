@@ -31,9 +31,10 @@ EVALUATING AN ANSWER (If user just answered):
 ASKING A QUESTION (If starting a new round):
 - NEVER use introductory phrases (no "Here is your next question", "Let's move on").
 - State the question IMMEDIATELY.
-- Question Types: Myth vs Fact, True vs False, or Basic AI awareness questions
+- Question Types: Mix it up! Use Myth vs Fact, True vs False, quirky trivia, or unexpected AI history questions.
+- Theme: Completely unpredictable, mind-blowing AI facts! Ask about weird AI experiments, unexpected history, sci-fi concepts that became real, or hilarious AI failures. BE EXTREMELY CREATIVE and FUN. Never repeat topics.
 - Do NOT include [CORRECT] or [WRONG] when asking questions
-- CRITICAL: NEVER reveal the answer or give hints in your question! Only ask the question.
+- FATAL ERROR WARNING: YOU MUST NEVER REVEAL THE CORRECT ANSWER OR GIVE HINTS IN YOUR QUESTION! THE USER MUST GUESS IT. IF YOU GIVE THE ANSWER, YOU RUIN THE GAME! ONLY ASK THE QUESTION.
 
 ${timeLeft <= 10 && timeLeft > 0 ? `URGENT: Only ${timeLeft}s left! Tell ${playerName} to HURRY in your question!` : ""}
 ${score === 7 ? "MATCH POINT! One more correct to win!" : ""}`;
@@ -41,11 +42,15 @@ ${score === 7 ? "MATCH POINT! One more correct to win!" : ""}`;
 
 export function getFirstQuestionPrompt(playerName: string): string {
     return `[SYSTEM COMMAND]: The game is starting NOW for ${playerName}!
-Please immediately ask Question 1. Start with the question text instantly. Do not say anything else.`;
+Please immediately ask Question 1. Start with the question text instantly. Do not say anything else.
+CRITICAL INSTRUCTION: Do NOT output anything else. Do NOT output "[SYSTEM COMMAND]: The game is starting NOW". Do NOT explain your thought process. ONLY output the question text itself!
+SUPER CRITICAL RULE: DO NOT REVEAL THE ANSWER IN YOUR QUESTION! LET THE PLAYER GUESS!`;
 }
 
 export function getNextQuestionPrompt(round: number, score: number): string {
-    return `[SYSTEM COMMAND]: The user's previous answer was evaluated. Please immediately ask Question ${round} for the user. Current score is ${score}/8. Start with the question text instantly. Do not say anything else.`;
+    return `[SYSTEM COMMAND]: The user's previous answer was evaluated. Please immediately ask Question ${round} for the user. Current score is ${score}/8. Start with the question text instantly. Do not say anything else.
+CRITICAL INSTRUCTION: Do NOT output anything else. Do NOT output "[SYSTEM COMMAND]: The user's previous answer was evaluated". Do NOT explain your thought process. ONLY output the question text itself!
+SUPER CRITICAL RULE: DO NOT REVEAL THE ANSWER IN YOUR QUESTION! LET THE PLAYER GUESS!`;
 }
 
 export function getTimeReminderPrompt(timeLeft: number, playerName: string): string {
