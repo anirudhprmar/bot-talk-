@@ -49,7 +49,12 @@ export default function Home() {
 
   // ── Stream a message from the API ──────────────────────────────────
   const streamMessage = useCallback(
-    async (messages: Message[], round: number, score: number) => {
+    async (
+      messages: Message[],
+      round: number,
+      score: number,
+      promptType: "question" | "reaction"
+    ) => {
       setGame((prev) => ({ ...prev, isStreaming: true }));
 
       try {
@@ -113,33 +118,38 @@ export default function Home() {
           }
         }
 
-        // Check for [CORRECT] or [WRONG] markers in the response
+        // Evaluate logic ONLY if this is a reaction prompt,
+        // otherwise it's just a question and we shouldn't arbitrarily look for markers.
         let newScore = score;
         let newRound = round;
-        const hasCorrect = fullContent.includes("[CORRECT]");
-        const hasWrong = fullContent.includes("[WRONG]");
+        let hasCorrect = false;
+        let hasWrong = false;
 
-        if (hasCorrect) {
-          newScore = score + 1;
-          playCorrectSound();
-        }
-        if (hasWrong) {
-          playWrongSound();
+        if (promptType === "reaction") {
+          hasCorrect = fullContent.includes("[CORRECT]");
+          hasWrong = fullContent.includes("[WRONG]");
+
+          if (hasCorrect) {
+            newScore = score + 1;
+            playCorrectSound();
+          }
+          if (hasWrong) {
+            playWrongSound();
+          }
+
+          if (hasCorrect || hasWrong) {
+            newRound = round + 1;
+          }
         }
 
-        // Always advance round after an answer is evaluated
-        if (hasCorrect || hasWrong) {
-          newRound = round + 1;
-        }
-
-        // Selectively speak the bot's response (questions + reactions only)
+        // Selectively speak the bot's response
         if (ttsEnabled && fullContent) {
           if (hasCorrect) {
             speakReaction("Yes! That's correct! Amazing!");
           } else if (hasWrong) {
             speakReaction("Oh no, that's wrong! Better luck next time!");
-          } else {
-            // Speaking a new question — use selective extraction
+          } else if (promptType === "question") {
+            // Only speak general response if it's a question, preventing accidental audio
             speakBotResponse(fullContent);
           }
         }
@@ -156,22 +166,16 @@ export default function Home() {
             result: "win",
           }));
         } else if (hasCorrect || hasWrong) {
-          // Pause timer, let user read evaluation, then ask next question
+          // Pause timer and wait for manual "Next Question" click
           setGame((prev) => ({
             ...prev,
             score: newScore,
             round: newRound,
             isStreaming: false,
             isTimerRunning: false,
+            isWaitingForNext: true,
           }));
-
-          setTimeout(() => {
-            // Clear chat and ask next question
-            const nextPrompt = getNextQuestionPrompt(newRound, newScore);
-            setGame((prev) => ({ ...prev, messages: [] }));
-            streamMessage([{ role: "user", content: nextPrompt }], newRound, newScore);
-          }, 4000);
-        } else {
+        } else if (promptType === "question") {
           // This must be the question itself, start timer!
           setGame((prev) => ({
             ...prev,
@@ -231,7 +235,7 @@ export default function Home() {
       currentTimeLeft.current = TIMER_DURATION;
 
       // Stream the first question
-      streamMessage(initialMessages, 1, 0);
+      streamMessage(initialMessages, 1, 0, "question");
     }, 3000);
   };
 
@@ -251,7 +255,7 @@ export default function Home() {
     }));
     setInput("");
 
-    streamMessage(updatedMessages, game.round, game.score);
+    streamMessage(updatedMessages, game.round, game.score, "reaction");
   };
 
 
@@ -283,6 +287,22 @@ export default function Home() {
     },
     []
   );
+
+  // ── Handle Next Question ──────────────────────────────────────────
+  const handleNextQuestion = () => {
+    stopSpeaking();
+
+    // Clear chat and ask next question
+    const nextPrompt = getNextQuestionPrompt(game.round, game.score);
+
+    setGame((prev) => ({
+      ...prev,
+      messages: [],
+      isWaitingForNext: false,
+    }));
+
+    streamMessage([{ role: "user", content: nextPrompt }], game.round, game.score, "question");
+  };
 
   // ── Reset ─────────────────────────────────────────────────────────
   const handleReset = () => {
@@ -429,25 +449,37 @@ export default function Home() {
 
         {/* Input area */}
         <div className="chat-input-area">
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder={
-              game.isStreaming ? "Buzzy is talking..." : "Type your answer..."
-            }
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            disabled={game.isStreaming}
-            className="chat-input"
-          />
-          <button
-            onClick={handleSend}
-            disabled={game.isStreaming || !input.trim()}
-            className="send-button brutalist-button"
-          >
-            Send 🎤
-          </button>
+          {game.isWaitingForNext ? (
+            <button
+              onClick={handleNextQuestion}
+              className="send-button brutalist-button"
+              style={{ width: "100%" }}
+            >
+              NEXT QUESTION ➡️
+            </button>
+          ) : (
+            <>
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder={
+                  game.isStreaming ? "Buzzy is talking..." : "Type your answer..."
+                }
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                disabled={game.isStreaming}
+                className="chat-input"
+              />
+              <button
+                onClick={handleSend}
+                disabled={game.isStreaming || !input.trim()}
+                className="send-button brutalist-button"
+              >
+                Send 🎤
+              </button>
+            </>
+          )}
         </div>
       </GameBoard>
     </div>

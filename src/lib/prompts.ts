@@ -31,6 +31,7 @@ ASKING A QUESTION (If starting a new round):
 - State the question IMMEDIATELY.
 - Question Types: Myth vs Fact, True vs False, or Basic AI awareness questions
 - Do NOT include [CORRECT] or [WRONG] when asking questions
+- CRITICAL: NEVER reveal the answer or give hints in your question! Only ask the question.
 
 ${timeLeft <= 10 && timeLeft > 0 ? `URGENT: Only ${timeLeft}s left! Tell ${playerName} to HURRY in your question!` : ""}
 ${score === 4 ? "MATCH POINT! One more correct to win!" : ""}`;

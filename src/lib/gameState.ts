@@ -14,6 +14,7 @@ export interface GameState {
     timerSeconds: number;
     isTimerRunning: boolean;
     isStreaming: boolean;
+    isWaitingForNext: boolean;
     result: "win" | "lose" | null;
 }
 
@@ -29,6 +30,7 @@ export const INITIAL_GAME_STATE: GameState = {
     timerSeconds: TIMER_DURATION,
     isTimerRunning: false,
     isStreaming: false,
+    isWaitingForNext: false,
     result: null,
 };
 
