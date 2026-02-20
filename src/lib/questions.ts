@@ -61,7 +61,18 @@ export const QUESTION_BANK: Question[] = [
     }
 ];
 
-export function getRandomQuestion(): Question {
-    const randomIndex = Math.floor(Math.random() * QUESTION_BANK.length);
-    return QUESTION_BANK[randomIndex];
+export function getRandomQuestion(askedIndices: number[] = []): { question: Question; index: number } {
+    let availableIndices = QUESTION_BANK.map((_, i) => i)
+        .filter(index => !askedIndices.includes(index));
+
+    // If all questions have been asked, reset the pool (optional fallback)
+    if (availableIndices.length === 0) {
+        availableIndices = QUESTION_BANK.map((_, i) => i);
+    }
+
+    const randomAvailableIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+    return {
+        question: QUESTION_BANK[randomAvailableIndex],
+        index: randomAvailableIndex
+    };
 }

@@ -16,10 +16,12 @@ export interface GameState {
     isStreaming: boolean;
     isWaitingForNext: boolean;
     result: "win" | "lose" | null;
+    currentQuestion: import("./questions").Question | null;
+    askedQuestions: number[];
 }
 
-export const TIMER_DURATION = 30; // seconds per question
-export const WIN_THRESHOLD = 5; // need 5 correct to win
+export const TIMER_DURATION = 60; // seconds per question
+export const WIN_THRESHOLD = 8; // need 8 correct to win
 
 export const INITIAL_GAME_STATE: GameState = {
     phase: "welcome",
@@ -32,6 +34,8 @@ export const INITIAL_GAME_STATE: GameState = {
     isStreaming: false,
     isWaitingForNext: false,
     result: null,
+    currentQuestion: null,
+    askedQuestions: [],
 };
 
 export function resetGame(): GameState {

@@ -31,7 +31,7 @@ export default function GameBoard({
                 </div>
                 <div className="hud-item right">
                     <span className="hud-label">Score</span>
-                    <span className="hud-value score-display">🏆 {score} / 5</span>
+                    <span className="hud-value score-display">🏆 {score} / 8</span>
                 </div>
             </div>
 

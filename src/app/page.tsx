@@ -5,16 +5,14 @@ import GameBoard from "@/components/GameBoard";
 import Timer from "@/components/Timer";
 import ChatBubble from "@/components/ChatBubble";
 import {
-  GameState,
-  INITIAL_GAME_STATE,
   TIMER_DURATION,
-  resetGame,
   Message,
 } from "@/lib/gameState";
 import {
   getFirstQuestionPrompt,
   getNextQuestionPrompt,
 } from "@/lib/prompts";
+import { getRandomQuestion } from "@/lib/questions";
 import {
   speakBotResponse,
   speakReaction,
@@ -25,15 +23,15 @@ import {
   playTimeUpSound,
   playTickSound,
 } from "@/lib/sounds";
+import { useGameStore } from "@/lib/store";
 
 export default function Home() {
-  const [game, setGame] = useState<GameState>(INITIAL_GAME_STATE);
+  const { game, setGame, ttsEnabled, setTtsEnabled, resetGame } = useGameStore();
   const [input, setInput] = useState("");
   const [nameInput, setNameInput] = useState("");
   const currentTimeLeft = useRef(TIMER_DURATION);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -155,7 +153,7 @@ export default function Home() {
         }
 
         // Check if game is over
-        if (newScore >= 5) {
+        if (newScore >= 8) {
           setGame((prev) => ({
             ...prev,
             score: newScore,
@@ -220,15 +218,21 @@ export default function Home() {
 
     // After hype animation, start the game
     setTimeout(() => {
+      const { question: firstQ, index: firstQIndex } = getRandomQuestion([]);
       const firstPrompt = getFirstQuestionPrompt(nameInput.trim());
+      const formatOptionsText = firstQ.options ? `\nOptions: ${firstQ.options.join(", ")}` : "";
+      const fullPrompt = `${firstPrompt}\n\nQuestion: ${firstQ.text}${formatOptionsText}`;
+
       const initialMessages: Message[] = [
-        { role: "user", content: firstPrompt },
+        { role: "user", content: fullPrompt },
       ];
 
       setGame((prev) => ({
         ...prev,
         phase: "playing",
         messages: [],
+        currentQuestion: firstQ,
+        askedQuestions: [firstQIndex],
         isTimerRunning: false, // Don't start timer until the first question finishes streaming
         timerSeconds: TIMER_DURATION,
       }));
@@ -293,21 +297,26 @@ export default function Home() {
     stopSpeaking();
 
     // Clear chat and ask next question
+    const { question: nextQ, index: nextQIndex } = getRandomQuestion(game.askedQuestions);
     const nextPrompt = getNextQuestionPrompt(game.round, game.score);
+    const formatOptionsText = nextQ.options ? `\nOptions: ${nextQ.options.join(", ")}` : "";
+    const fullPrompt = `${nextPrompt}\n\nQuestion: ${nextQ.text}${formatOptionsText}`;
 
     setGame((prev) => ({
       ...prev,
       messages: [],
+      currentQuestion: nextQ,
+      askedQuestions: [...prev.askedQuestions, nextQIndex],
       isWaitingForNext: false,
     }));
 
-    streamMessage([{ role: "user", content: nextPrompt }], game.round, game.score, "question");
+    streamMessage([{ role: "user", content: fullPrompt }], game.round, game.score, "question");
   };
 
   // ── Reset ─────────────────────────────────────────────────────────
   const handleReset = () => {
     stopSpeaking();
-    setGame(resetGame());
+    resetGame();
     setInput("");
     setNameInput("");
     currentTimeLeft.current = TIMER_DURATION;
@@ -329,8 +338,8 @@ export default function Home() {
           <p className="welcome-subtitle">Bot-n-Rool @ Arunya Fest 2026</p>
           <div className="welcome-rules">
             <div className="rule">🔥 Endless Mode</div>
-            <div className="rule">⏱️ 30 Seconds Each</div>
-            <div className="rule">🏆 5 Correct to Win</div>
+            <div className="rule">⏱️ 60 Seconds Each</div>
+            <div className="rule">🏆 8 Correct to Win</div>
           </div>
           <div className="welcome-input-group">
             <input
@@ -397,7 +406,7 @@ export default function Home() {
           <div className="result-score">
             <span className="result-score-number">{game.score}</span>
             <span className="result-score-label">
-              / 5 correct
+              / 8 correct
             </span>
           </div>
           <p className="result-message">
