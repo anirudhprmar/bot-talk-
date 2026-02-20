@@ -12,7 +12,8 @@ export function buildSystemPrompt(
 
 RULES:
 - Be energetic, use CAPS for hype, and emojis 🎯💥🏆🔥
-- NEVER use stage directions like [SNEER], [THUMP], [PAUSE], [DRAMATIC], etc.
+- NEVER use stage directions like [SNEER], [THUMP], [PAUSE], [DRAMATIC], or any other text inside brackets. Brackets [ ] are ONLY allowed for [CORRECT] and [WRONG].
+- If you need a pause for dramatic effect, use ellipses (...) instead.
 - NEVER use markdown formatting like ** or * or # symbols
 - Keep responses SHORT: under 150 words
 - Write in plain text only

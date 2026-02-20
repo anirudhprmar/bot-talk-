@@ -124,14 +124,23 @@ export default function Home() {
         let hasWrong = false;
 
         if (promptType === "reaction") {
-          hasCorrect = fullContent.includes("[CORRECT]");
-          hasWrong = fullContent.includes("[WRONG]");
+          const upperContent = fullContent.toUpperCase();
+          hasCorrect = upperContent.includes("[CORRECT]");
+          hasWrong = upperContent.includes("[WRONG]");
+
+          // Fallback: If LLM failed to explicitly bracket a marker, guess from text or default to wrong
+          if (!hasCorrect && !hasWrong) {
+            if (upperContent.includes("CORRECT") || upperContent.includes("RIGHT!")) {
+              hasCorrect = true;
+            } else {
+              hasWrong = true; // Default fallback to keep game un-stuck
+            }
+          }
 
           if (hasCorrect) {
             newScore = score + 1;
             playCorrectSound();
-          }
-          if (hasWrong) {
+          } else if (hasWrong) {
             playWrongSound();
           }
 
@@ -162,6 +171,17 @@ export default function Home() {
             isTimerRunning: false,
             phase: "result",
             result: "win",
+          }));
+        } else if (newRound > 8 && promptType === "reaction") {
+          // If they just finished question 8 and didn't hit 8 score, they lose
+          setGame((prev) => ({
+            ...prev,
+            score: newScore,
+            round: newRound,
+            isStreaming: false,
+            isTimerRunning: false,
+            phase: "result",
+            result: "lose",
           }));
         } else if (hasCorrect || hasWrong) {
           // Pause timer and wait for manual "Next Question" click

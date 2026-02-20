@@ -18,8 +18,8 @@ interface ChatBubbleProps {
 function cleanContent(raw: string): string {
     return raw
         // Remove [CORRECT] and [WRONG] markers
-        .replace(/\[CORRECT\]/g, "")
-        .replace(/\[WRONG\]/g, "")
+        .replace(/\[CORRECT\]/gi, "")
+        .replace(/\[WRONG\]/gi, "")
         // Remove stage directions: **[ANYTHING]...**
         .replace(/\*?\*?\[[\w\s.!]+\]\.{0,3}\*?\*?/g, "")
         .trim();
