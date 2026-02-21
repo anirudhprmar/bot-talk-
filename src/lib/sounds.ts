@@ -168,21 +168,7 @@ export function speakBotResponse(fullText: string) {
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
 
-    // Avoid Chrome TTS Garbage Collection bug
-    // Store utterances globally so they aren't destroyed mid-speech
-    // @ts-expect-error - Attach to window hack
-    window.__utterances = window.__utterances || [];
-
     const utterance = new SpeechSynthesisUtterance(speakable);
-
-    // Clean up when done
-    utterance.onend = () => {
-        // @ts-expect-error
-        const idx = window.__utterances.indexOf(utterance);
-        // @ts-expect-error
-        if (idx !== -1) window.__utterances.splice(idx, 1);
-    };
-
     utterance.rate = 1.05;     // Slightly energetic
     utterance.pitch = 1.05;    // Slightly warm
     utterance.volume = 0.85;
@@ -198,8 +184,6 @@ export function speakBotResponse(fullText: string) {
     );
     if (preferred) utterance.voice = preferred;
 
-    // @ts-expect-error
-    window.__utterances.push(utterance);
     window.speechSynthesis.speak(utterance);
 }
 
@@ -215,15 +199,6 @@ export function speakReaction(phrase: string) {
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(phrase);
-
-    // Clean up when done
-    utterance.onend = () => {
-        // @ts-expect-error
-        const idx = window.__utterances.indexOf(utterance);
-        // @ts-expect-error
-        if (idx !== -1) window.__utterances.splice(idx, 1);
-    };
-
     utterance.rate = 1.2;
     utterance.pitch = 1.15;
     utterance.volume = 0.9;
@@ -232,7 +207,5 @@ export function speakReaction(phrase: string) {
     const voice = voices.find(v => v.lang.startsWith("en")) || null;
     if (voice) utterance.voice = voice;
 
-    // @ts-expect-error
-    window.__utterances.push(utterance);
     window.speechSynthesis.speak(utterance);
 }
